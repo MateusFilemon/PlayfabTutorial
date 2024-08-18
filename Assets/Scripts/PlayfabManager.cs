@@ -244,12 +244,13 @@ public class PlayfabManager : MonoBehaviour
 
     private void CreateAccountFail(PlayFabError error)
     {
-
+        MenuController.instance.ShowScreen(MenuController.Screens.CreateAccount);
+        MenuController.instance.ShowMessage(error.ErrorMessage);
     }
 
     private void CreateAccountSucess(RegisterPlayFabUserResult result)
     {
-
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
     }
 
     public void Userlogin (string _username, string _password)
@@ -264,12 +265,12 @@ public class PlayfabManager : MonoBehaviour
 
     private void UserLoginFail(PlayFabError error)
     {
-        
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
     }
 
     private void UserLoginSucess(LoginResult result)
     {
-        
+        MenuController.instance.ShowScreen(MenuController.Screens.None);
     }
 }
 

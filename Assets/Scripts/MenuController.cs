@@ -66,11 +66,66 @@ public class MenuController : MonoBehaviour
 
     public void BtnLogin()
     {
+        ShowScreen(Screens.Loading);
+        string _usernameOrEmail = usernameEmailLoginInput.text;
+        string _password = passwordLoginInput.text;
 
+        if (string.IsNullOrEmpty(_usernameOrEmail) || string.IsNullOrEmpty(_password))
+        {
+            ShowMessage("Preencha todos os campos");
+            ShowScreen(Screens.Login);
+        }
+        else if (_usernameOrEmail.Length < 4)
+        {
+            ShowMessage("Dados do usuário inválidos");
+            ShowScreen(Screens.Login);
+        }
+        else
+        {
+            PlayfabManager.instance.UserLogin(_usernameOrEmail, _password);
+        }
     }
+
     public void BtnCreateAccount()
     {
+        ShowScreen(Screens.Loading);
 
+        string _username = usernameInput.text;
+        string _email = emailInput.text;
+        string _password = passwordInput.text;
+        string _confirmPassword = confirmPasswordInput.text;
+
+        if (string.IsNullOrEmpty(_username) ||
+            string.IsNullOrEmpty(_email) ||
+            string.IsNullOrEmpty(_password) ||
+            string.IsNullOrEmpty(_confirmPassword))
+        {
+
+            Debug.Log("Por favor preencher todos os campos");
+            ShowMessage("Por favor preencher todos os campos");
+            ShowScreen(Screens.CreateAccount);
+        }
+        else if (_username.Length < 4)
+        {
+            Debug.Log("Nome de usuário precisa ter pelo menos 4 caracteres");
+            ShowMessage("Nome de usuário precisa ter pelo menos 4 caracteres");
+            ShowScreen(Screens.CreateAccount);
+        }
+        else if (_password.Length < 5)
+        {
+            ShowMessage("Senha precisa ter pelo menos 5 caracteres")
+            ShowScreen(Screens.CreateAccount);
+        }
+        else if (_password != _confirmPassword)
+        {
+            Debug.Log("A senha não confere!!")
+            ShowMessage("A senha não confere!!")
+            ShowScreen(Screens.CreateAccount);
+        }
+        else
+        {
+            PlayfabManager.instance.CreateAccount(_username, _email, _password);
+        }
     }
 
     public void BtnBackToLogin()
