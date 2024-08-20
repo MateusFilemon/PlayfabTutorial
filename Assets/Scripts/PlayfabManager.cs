@@ -4,7 +4,7 @@ using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
-using UnityEditor.PackageManager.Requests;
+using UnityEditor.PackageManager;
 
 public class PlayfabManager : MonoBehaviour
 {
@@ -14,7 +14,6 @@ public class PlayfabManager : MonoBehaviour
     //dados do playerData salvos localmente
     Dictionary<string, string> playerData = new Dictionary<string, string>();
 
-
     private void Awake()
     {
         instance = this;
@@ -22,11 +21,11 @@ public class PlayfabManager : MonoBehaviour
 
     void Start()
     {
-        Login();
+
     }
 
     #region Login
-    void Login()
+    void LoginWithCustomID()
     {
         var requestLogin = new LoginWithCustomIDRequest
         {
@@ -213,9 +212,9 @@ public class PlayfabManager : MonoBehaviour
     {
         var _request = new AddUsernamePasswordRequest()
         {
-            Username = "",
-            Password = "",
-            Email = ""
+            Username = "ProfCleberECDD",
+            Password = "@123456",
+            Email = "pcecdd@infnet.edu.br"
         };
         PlayFabClientAPI.AddUsernamePassword(_request, AddUsernamePasswordSucess, AddUsernamePasswordFail);
 
@@ -231,7 +230,8 @@ public class PlayfabManager : MonoBehaviour
         Debug.Log("Erro: " + error.ErrorMessage);
     }
 
-    public void CreateAccount (string _username, string _email, string _password)
+
+    public void CreateAccount(string _username, string _email, string _password)
     {
         var request = new RegisterPlayFabUserRequest()
         {
@@ -239,37 +239,97 @@ public class PlayfabManager : MonoBehaviour
             Email = _email,
             Password = _password
         };
-        PlayFabClientAPI.RegisterPlayFabUser(request,CreateAccountSucess,CreateAccountFail);
-    }
-
-    private void CreateAccountFail(PlayFabError error)
-    {
-
+        PlayFabClientAPI.RegisterPlayFabUser(request, CreateAccountSucess, CreateAccountFail);
     }
 
     private void CreateAccountSucess(RegisterPlayFabUserResult result)
     {
-
+        Debug.Log("Conta criada com sucesso!");
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
+        MenuController.instance.ShowMessage("Conta criada com sucesso!");
     }
 
-    public void Userlogin (string _username, string _password)
+    private void CreateAccountFail(PlayFabError error)
+    {
+        Debug.Log("Erro: " + error.ErrorMessage);
+        MenuController.instance.ShowScreen(MenuController.Screens.CreateAccount);
+        MenuController.instance.ShowMessage("Erro: " + error.ErrorMessage);
+    }
+
+    public void UserLogin(string _username, string _password)
     {
         var _request = new LoginWithPlayFabRequest()
         {
             Username = _username,
             Password = _password
         };
-        PlayFabClientAPI.LoginWithPlayFab(_request, UserLoginSucess, UserLoginFail);
-    }
-
-    private void UserLoginFail(PlayFabError error)
-    {
-        
+        PlayFabClientAPI.LoginWithPlayFab(
+            _request,
+            UserLoginSucess,
+            error =>
+            {
+                Debug.Log("Efetuando login com email!");
+                var _requestEmail = new LoginWithEmailAddressRequest()
+                {
+                    Email = _username,
+                    Password = _password
+                };
+                PlayFabClientAPI.LoginWithEmailAddress(_requestEmail, UserLoginSucess, UserLoginFail);
+            });
     }
 
     private void UserLoginSucess(LoginResult result)
     {
-        
+        Debug.Log("Login Efetuado com sucesso!");
+        MenuController.instance.ShowMessage("Login Efetuado com sucesso!");
+        MenuController.instance.ShowScreen(MenuController.Screens.None);
+    }
+
+    private void UserLoginFail(PlayFabError error)
+    {
+        Debug.Log("Erro: " + error.ErrorMessage);
+        MenuController.instance.ShowMessage("Erro: " + error.ErrorMessage);
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
+    }
+
+    public void RecoverPassword(string _email)
+    {
+        var _request = new SendAccountRecoveryEmailRequest()
+        {
+            Email = _email,
+            TitleId = PlayFabSettings.TitleId
+        };
+        PlayFabClientAPI.SendAccountRecoveryEmail(_request, RecoverPasswordSucess, RecoverPasswordFail);
+    }
+
+    private void RecoverPasswordFail(PlayFabError error)
+    {
+        MenuController.instance.ShowMessage("Error: " + error.ErrorMessage);
+    }
+
+    private void RecoverPasswordSucess(SendAccountRecoveryEmailResult result)
+    {
+        MenuController.instance.ShowMessage("Solicitação de Recuperação de Conta efetuada com sucesso!" + "\nFavor verificar seu email.");
+    }
+
+    public void DeleteAccount()
+    {
+        var request = new ExecuteCloudScriptRequest()
+        {
+            FunctionName = "deletePlayerAccount",
+            GeneratePlayStreamEvent = true
+        };
+        PlayFabClientAPI.ExecuteCloudScript(request, DeleteAccountSucess, DeleteAccountFail);
+    }
+
+    private void DeleteAccountFail(PlayFabError error)
+    {
+        MenuController.instance.ShowMessage("Error: " + error.ErrorMessage);
+    }
+
+    private void DeleteAccountSucess(ExecuteCloudScriptResult result)
+    {
+        MenuController.instance.ShowMessage("Conta excluída com sucesso");
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
     }
 }
-
