@@ -86,19 +86,17 @@ public class MenuController : MonoBehaviour
     public void BtnLogin()
     {
         ShowScreen(Screens.Loading);
+        string _usernameOrEmail = usernameEmailLoginInput.text;
+        string _password = passwordLoginInput.text;
 
-        string _usernameOrEmail = inputUsernameOrEmailLogin.text;
-        string _password = inputPasswordLogin.text;
-
-        if (string.IsNullOrEmpty(_usernameOrEmail) ||
-            string.IsNullOrEmpty(_password))
+        if (string.IsNullOrEmpty(_usernameOrEmail) || string.IsNullOrEmpty(_password))
         {
-            ShowMessage("Favor preencher todos os campos!");
+            ShowMessage("Preencha todos os campos");
             ShowScreen(Screens.Login);
         }
-        else if (_usernameOrEmail.Length < 3)
+        else if (_usernameOrEmail.Length < 4)
         {
-            ShowMessage("Dados de usuário inválidos!");
+            ShowMessage("Dados do usuário inválidos");
             ShowScreen(Screens.Login);
         }
         else
@@ -111,30 +109,36 @@ public class MenuController : MonoBehaviour
     {
         ShowScreen(Screens.Loading);
 
-        string _username = inputUsernameCreateAccount.text;
-        string _email = inputEmailCreateAccount.text;
-        string _password = inputPasswordCreateAccount.text;
-        string _confirmPassword = inputConfirmPasswordCreateAccount.text;
+        string _username = usernameInput.text;
+        string _email = emailInput.text;
+        string _password = passwordInput.text;
+        string _confirmPassword = confirmPasswordInput.text;
 
         if (string.IsNullOrEmpty(_username) ||
             string.IsNullOrEmpty(_email) ||
             string.IsNullOrEmpty(_password) ||
             string.IsNullOrEmpty(_confirmPassword))
         {
-            Debug.Log("Favor preencher todos os campos!");
-            ShowMessage("Favor preencher todos os campos!");
+
+            Debug.Log("Por favor preencher todos os campos");
+            ShowMessage("Por favor preencher todos os campos");
             ShowScreen(Screens.CreateAccount);
         }
-        else if (_username.Length < 3)
+        else if (_username.Length < 4)
         {
-            Debug.Log("Username precisa ter ao menos 3 caracteres");
-            ShowMessage("Username precisa ter ao menos 3 caracteres");
+            Debug.Log("Nome de usuário precisa ter pelo menos 4 caracteres");
+            ShowMessage("Nome de usuário precisa ter pelo menos 4 caracteres");
+            ShowScreen(Screens.CreateAccount);
+        }
+        else if (_password.Length < 5)
+        {
+            ShowMessage("Senha precisa ter pelo menos 5 caracteres")
             ShowScreen(Screens.CreateAccount);
         }
         else if (_password != _confirmPassword)
         {
-            Debug.Log("A senha não confere! Favor verificar a senha digitada!");
-            ShowMessage("A senha não confere! Favor verificar a senha digitada!");
+            Debug.Log("A senha não confere!!")
+            ShowMessage("A senha não confere!!")
             ShowScreen(Screens.CreateAccount);
         }
         else

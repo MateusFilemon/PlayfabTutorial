@@ -239,14 +239,18 @@ public class PlayfabManager : MonoBehaviour
             Email = _email,
             Password = _password
         };
-        PlayFabClientAPI.RegisterPlayFabUser(request, CreateAccountSucess, CreateAccountFail);
+        PlayFabClientAPI.RegisterPlayFabUser(request,CreateAccountSucess,CreateAccountFail);
+    }
+
+    private void CreateAccountFail(PlayFabError error)
+    {
+        MenuController.instance.ShowScreen(MenuController.Screens.CreateAccount);
+        MenuController.instance.ShowMessage(error.ErrorMessage);
     }
 
     private void CreateAccountSucess(RegisterPlayFabUserResult result)
     {
-        Debug.Log("Conta criada com sucesso!");
         MenuController.instance.ShowScreen(MenuController.Screens.Login);
-        MenuController.instance.ShowMessage("Conta criada com sucesso!");
     }
 
     private void CreateAccountFail(PlayFabError error)
@@ -263,19 +267,12 @@ public class PlayfabManager : MonoBehaviour
             Username = _username,
             Password = _password
         };
-        PlayFabClientAPI.LoginWithPlayFab(
-            _request,
-            UserLoginSucess,
-            error =>
-            {
-                Debug.Log("Efetuando login com email!");
-                var _requestEmail = new LoginWithEmailAddressRequest()
-                {
-                    Email = _username,
-                    Password = _password
-                };
-                PlayFabClientAPI.LoginWithEmailAddress(_requestEmail, UserLoginSucess, UserLoginFail);
-            });
+        PlayFabClientAPI.LoginWithPlayFab(_request, UserLoginSucess, UserLoginFail);
+    }
+
+    private void UserLoginFail(PlayFabError error)
+    {
+        MenuController.instance.ShowScreen(MenuController.Screens.Login);
     }
 
     private void UserLoginSucess(LoginResult result)
