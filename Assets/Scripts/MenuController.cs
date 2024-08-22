@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using PlayFab;
 
 public class MenuController : MonoBehaviour
 {
@@ -13,15 +14,18 @@ public class MenuController : MonoBehaviour
         Loading,
         Login,
         CreateAccount,
-        RecoverAccount
+        RecoverAccount,
+        Ranking
     }
     public Screens currentScreen;
 
+    [Header("Screens")]
     [SerializeField] GameObject loadingScreen;
     [SerializeField] GameObject loginScreen;
     [SerializeField] GameObject createAccountScreen;
     [SerializeField] GameObject messageScreen;
     [SerializeField] GameObject recoverAccountScreen;
+    [SerializeField] GameObject rankingScreen;
     [SerializeField] TextMeshProUGUI messageTXT;
 
     [Header("Login Information")]
@@ -37,6 +41,11 @@ public class MenuController : MonoBehaviour
     [Header("Recover Account")]
     [SerializeField] TMP_InputField inputRecoverAccount;
 
+    [Header("Rankings")]
+    [SerializeField] string rankingName;
+    [SerializeField] TMP_InputField rankingValue;
+    [SerializeField] TextMeshProUGUI rankingTxt;
+    [SerializeField] TextMeshProUGUI rankingListTxt;
 
     private void Awake()
     {
@@ -52,6 +61,7 @@ public class MenuController : MonoBehaviour
         loginScreen.SetActive(false);
         createAccountScreen.SetActive(false);
         recoverAccountScreen.SetActive(false);
+        rankingScreen.SetActive(false);
 
         switch (currentScreen)
         {
@@ -79,6 +89,10 @@ public class MenuController : MonoBehaviour
             case Screens.RecoverAccount:
                 recoverAccountScreen.SetActive(true);
                 break;
+
+            case Screens.Ranking:
+                rankingScreen.SetActive(true);
+                break;
         }
     }
 
@@ -86,17 +100,19 @@ public class MenuController : MonoBehaviour
     public void BtnLogin()
     {
         ShowScreen(Screens.Loading);
-        string _usernameOrEmail = usernameEmailLoginInput.text;
-        string _password = passwordLoginInput.text;
 
-        if (string.IsNullOrEmpty(_usernameOrEmail) || string.IsNullOrEmpty(_password))
+        string _usernameOrEmail = inputUsernameOrEmailLogin.text;
+        string _password = inputPasswordLogin.text;
+
+        if (string.IsNullOrEmpty(_usernameOrEmail) ||
+            string.IsNullOrEmpty(_password))
         {
-            ShowMessage("Preencha todos os campos");
+            ShowMessage("Favor preencher todos os campos!");
             ShowScreen(Screens.Login);
         }
-        else if (_usernameOrEmail.Length < 4)
+        else if (_usernameOrEmail.Length < 3)
         {
-            ShowMessage("Dados do usuário inválidos");
+            ShowMessage("Dados de usuário inválidos!");
             ShowScreen(Screens.Login);
         }
         else
@@ -109,36 +125,30 @@ public class MenuController : MonoBehaviour
     {
         ShowScreen(Screens.Loading);
 
-        string _username = usernameInput.text;
-        string _email = emailInput.text;
-        string _password = passwordInput.text;
-        string _confirmPassword = confirmPasswordInput.text;
+        string _username = inputUsernameCreateAccount.text;
+        string _email = inputEmailCreateAccount.text;
+        string _password = inputPasswordCreateAccount.text;
+        string _confirmPassword = inputConfirmPasswordCreateAccount.text;
 
         if (string.IsNullOrEmpty(_username) ||
             string.IsNullOrEmpty(_email) ||
             string.IsNullOrEmpty(_password) ||
             string.IsNullOrEmpty(_confirmPassword))
         {
-
-            Debug.Log("Por favor preencher todos os campos");
-            ShowMessage("Por favor preencher todos os campos");
+            Debug.Log("Favor preencher todos os campos!");
+            ShowMessage("Favor preencher todos os campos!");
             ShowScreen(Screens.CreateAccount);
         }
-        else if (_username.Length < 4)
+        else if (_username.Length < 3)
         {
-            Debug.Log("Nome de usuário precisa ter pelo menos 4 caracteres");
-            ShowMessage("Nome de usuário precisa ter pelo menos 4 caracteres");
-            ShowScreen(Screens.CreateAccount);
-        }
-        else if (_password.Length < 5)
-        {
-            ShowMessage("Senha precisa ter pelo menos 5 caracteres")
+            Debug.Log("Username precisa ter ao menos 3 caracteres");
+            ShowMessage("Username precisa ter ao menos 3 caracteres");
             ShowScreen(Screens.CreateAccount);
         }
         else if (_password != _confirmPassword)
         {
-            Debug.Log("A senha não confere!!")
-            ShowMessage("A senha não confere!!")
+            Debug.Log("A senha não confere! Favor verificar a senha digitada!");
+            ShowMessage("A senha não confere! Favor verificar a senha digitada!");
             ShowScreen(Screens.CreateAccount);
         }
         else
@@ -158,14 +168,12 @@ public class MenuController : MonoBehaviour
 
     public void BtnRecoverAccount()
     {
-        PlayfabManager.instance.RecoverPassword(inputRecoverAccount.text);
+        PlayfabManager.instance.Recoverpassword(inputRecoverAccount.text);
     }
-
     public void BtnShowRecoverAccountScreen()
     {
         ShowScreen(Screens.RecoverAccount);
     }
-
     #endregion
 
     #region Others
@@ -174,11 +182,40 @@ public class MenuController : MonoBehaviour
         messageTXT.text = _message;
         messageScreen.SetActive(true);
     }
-
     public void BtnDeleteAccount()
     {
         PlayfabManager.instance.DeleteAccount();
     }
 
     #endregion
+
+    public void UpdateRanking()
+    {
+        if (string.IsNullOrEmpty(rankingValue.text))
+        {
+            ShowMessage("Favor informar o valor a ser atualizado!");
+            return;
+        }
+        ShowScreen(Screens.Loading);
+        PlayfabManager.instance.UpdatePlayerScore(rankingName, int.Parse(rankingValue.text));
+
+
+    }
+
+    public void UpdatePlayerRanking(int _value)
+    {
+        rankingTxt.text = "Ranking Atual: " + _value.ToString();
+    }
+
+    public void UpdateRankingList(string _list)
+    {
+        rankingListTxt.text = _list;
+        ShowScreen(Screens.Ranking);
+    }
+
+    public void StartGame()
+    {
+        ShowScreen(Screens.Loading);
+        PlayfabManager.instance.GetLeaderboard(rankingName);
+    }
 }

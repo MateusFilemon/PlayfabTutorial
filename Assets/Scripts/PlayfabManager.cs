@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
-using System;
-using UnityEditor.PackageManager;
-
 public class PlayfabManager : MonoBehaviour
 {
     public static PlayfabManager instance;
@@ -239,18 +236,14 @@ public class PlayfabManager : MonoBehaviour
             Email = _email,
             Password = _password
         };
-        PlayFabClientAPI.RegisterPlayFabUser(request,CreateAccountSucess,CreateAccountFail);
-    }
-
-    private void CreateAccountFail(PlayFabError error)
-    {
-        MenuController.instance.ShowScreen(MenuController.Screens.CreateAccount);
-        MenuController.instance.ShowMessage(error.ErrorMessage);
+        PlayFabClientAPI.RegisterPlayFabUser(request, CreateAccountSucess, CreateAccountFail);
     }
 
     private void CreateAccountSucess(RegisterPlayFabUserResult result)
     {
+        Debug.Log("Conta criada com sucesso!");
         MenuController.instance.ShowScreen(MenuController.Screens.Login);
+        MenuController.instance.ShowMessage("Conta criada com sucesso!");
     }
 
     private void CreateAccountFail(PlayFabError error)
@@ -267,19 +260,30 @@ public class PlayfabManager : MonoBehaviour
             Username = _username,
             Password = _password
         };
-        PlayFabClientAPI.LoginWithPlayFab(_request, UserLoginSucess, UserLoginFail);
-    }
-
-    private void UserLoginFail(PlayFabError error)
-    {
-        MenuController.instance.ShowScreen(MenuController.Screens.Login);
+        PlayFabClientAPI.LoginWithPlayFab(
+            _request,
+            UserLoginSucess,
+            error =>
+            {
+                Debug.Log("Efetuando login com email!");
+                var _requestEmail = new LoginWithEmailAddressRequest()
+                {
+                    Email = _username,
+                    Password = _password
+                };
+                PlayFabClientAPI.LoginWithEmailAddress(_requestEmail, UserLoginSucess, UserLoginFail);
+            });
     }
 
     private void UserLoginSucess(LoginResult result)
     {
         Debug.Log("Login Efetuado com sucesso!");
-        MenuController.instance.ShowMessage("Login Efetuado com sucesso!");
-        MenuController.instance.ShowScreen(MenuController.Screens.None);
+        //MenuController.instance.ShowMessage("Login Efetuado com sucesso!");
+        //MenuController.instance.ShowScreen(MenuController.Screens.None);
+        
+        MenuController.instance.StartGame();
+
+
     }
 
     private void UserLoginFail(PlayFabError error)
@@ -289,24 +293,26 @@ public class PlayfabManager : MonoBehaviour
         MenuController.instance.ShowScreen(MenuController.Screens.Login);
     }
 
-    public void RecoverPassword(string _email)
+
+    public void Recoverpassword(string _email)
     {
         var _request = new SendAccountRecoveryEmailRequest()
         {
             Email = _email,
             TitleId = PlayFabSettings.TitleId
         };
-        PlayFabClientAPI.SendAccountRecoveryEmail(_request, RecoverPasswordSucess, RecoverPasswordFail);
+        PlayFabClientAPI.SendAccountRecoveryEmail(_request, RecoverpasswordSucess, RecoverpasswordFail);
     }
 
-    private void RecoverPasswordFail(PlayFabError error)
+    private void RecoverpasswordSucess(SendAccountRecoveryEmailResult result)
     {
-        MenuController.instance.ShowMessage("Error: " + error.ErrorMessage);
+        MenuController.instance.ShowMessage("Solicitação de Recuperação de Conta efetuada com sucesso! " +
+            "\nFavor verificar seu email.");
     }
 
-    private void RecoverPasswordSucess(SendAccountRecoveryEmailResult result)
+    private void RecoverpasswordFail(PlayFabError error)
     {
-        MenuController.instance.ShowMessage("Solicitação de Recuperação de Conta efetuada com sucesso!" + "\nFavor verificar seu email.");
+        MenuController.instance.ShowMessage("Erro: " + error.ErrorMessage);
     }
 
     public void DeleteAccount()
@@ -319,14 +325,70 @@ public class PlayfabManager : MonoBehaviour
         PlayFabClientAPI.ExecuteCloudScript(request, DeleteAccountSucess, DeleteAccountFail);
     }
 
-    private void DeleteAccountFail(PlayFabError error)
-    {
-        MenuController.instance.ShowMessage("Error: " + error.ErrorMessage);
-    }
-
     private void DeleteAccountSucess(ExecuteCloudScriptResult result)
     {
-        MenuController.instance.ShowMessage("Conta excluída com sucesso");
         MenuController.instance.ShowScreen(MenuController.Screens.Login);
+        MenuController.instance.ShowMessage("Conta excluida com sucesso!");
+    }
+
+    private void DeleteAccountFail(PlayFabError error)
+    {
+        MenuController.instance.ShowMessage("Erro: " + error.ErrorMessage);
+    }
+
+    public void UpdatePlayerScore(string _statisticName, int _score)
+    {
+        var request = new UpdatePlayerStatisticsRequest
+        {
+            Statistics = new List<StatisticUpdate>
+            {
+                new StatisticUpdate { StatisticName = _statisticName, Value = _score}
+
+            }
+        };
+
+        PlayFabClientAPI.UpdatePlayerStatistics(request,
+        sucess =>
+        {
+            Debug.Log("Pontuação atualizada com sucesso!");
+            GetLeaderboard(_statisticName);
+        },
+        error =>
+        {
+            Debug.Log("Erro: " + error.ErrorMessage);
+        });
+
+    }
+
+    public void GetLeaderboard(string _statisticName)
+    {
+        var _request = new GetLeaderboardRequest()
+        {
+            StatisticName = _statisticName,
+            StartPosition = 0,
+            MaxResultsCount = 10
+        };
+        PlayFabClientAPI.GetLeaderboard(_request,
+            results =>
+            {
+                string _list = "";
+                MenuController.instance.UpdatePlayerRanking(0);
+                foreach (var result in results.Leaderboard)
+                {
+                    Debug.Log(result.PlayFabId + " - Jogador : " + PlayFabID);
+
+                    if (result.PlayFabId == PlayFabID)
+                    {
+                       
+                        MenuController.instance.UpdatePlayerRanking(result.StatValue);
+                    }
+                    _list += (result.Position + 1).ToString() + ": " + result.StatValue.ToString() + "\n";
+                }
+                MenuController.instance.UpdateRankingList(_list);
+            },
+            error =>
+            {
+                Debug.Log("Erro: " + error.ErrorMessage);
+            });
     }
 }
