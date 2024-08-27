@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
+using System;
+using static MenuController;
 public class PlayfabManager : MonoBehaviour
 {
     public static PlayfabManager instance;
@@ -10,6 +12,9 @@ public class PlayfabManager : MonoBehaviour
 
     //dados do playerData salvos localmente
     Dictionary<string, string> playerData = new Dictionary<string, string>();
+
+    public bool apiFinished = false;
+    public int goldCoins;
 
     private void Awake()
     {
@@ -280,10 +285,21 @@ public class PlayfabManager : MonoBehaviour
         Debug.Log("Login Efetuado com sucesso!");
         //MenuController.instance.ShowMessage("Login Efetuado com sucesso!");
         //MenuController.instance.ShowScreen(MenuController.Screens.None);
-        
+        PlayFabID = result.PlayFabId;
+
+        MenuController.instance.ShowScreen(Screens.Loading);
+
+        apiFinished = false;
+
+        StartCoroutine("LoadGame");
+      
+        GetPlayerInventory();
+    }
+    IEnumerator LoadGame()
+    {
+        GetPlayerInventory();
+        yield return new WaitUntil(() => apiFinished);
         MenuController.instance.StartGame();
-
-
     }
 
     private void UserLoginFail(PlayFabError error)
@@ -379,7 +395,7 @@ public class PlayfabManager : MonoBehaviour
 
                     if (result.PlayFabId == PlayFabID)
                     {
-                       
+
                         MenuController.instance.UpdatePlayerRanking(result.StatValue);
                     }
                     _list += (result.Position + 1).ToString() + ": " + result.StatValue.ToString() + "\n";
@@ -391,4 +407,91 @@ public class PlayfabManager : MonoBehaviour
                 Debug.Log("Erro: " + error.ErrorMessage);
             });
     }
+
+    public void AddVirtualCurrency(string idCoin, int amount)
+    {
+        var request = new AddUserVirtualCurrencyRequest()
+        {
+            VirtualCurrency = idCoin,
+            Amount = amount
+        };
+        PlayFabClientAPI.AddUserVirtualCurrency(request,
+            sucess =>
+            {
+                Debug.Log("Moedas adicionadas com sucesso!");
+            },
+            error =>
+            {
+                Debug.Log("Erro: " + error.ErrorMessage);
+            });
+
+    }
+
+    public void BuyItemToPlayer(string itemId, string coin, int value)
+    {
+        var request = new PurchaseItemRequest()
+        {
+            ItemId = itemId,
+            VirtualCurrency = coin,
+            Price = value
+        };
+        PlayFabClientAPI.PurchaseItem(request, sucess =>
+        {
+            if(coin == "PC") goldCoins -= value;
+
+            Debug.Log("Item comprado com sucesso!");
+            foreach (var item in sucess.Items)
+            {
+                Debug.Log("Item comprado: " + item.ItemId + " - " + item.DisplayName);
+            }
+        }, BuyItemToPlayerFail);
+
+    }
+
+    private void BuyItemToPlayerFail(PlayFabError error)
+    {
+        Debug.Log("Erro: " + error.ErrorMessage);
+    }
+
+    /*private void BuyItemToPlayerSucess(PurchaseItemResult result)
+    {
+        Debug.Log("Item comprado com sucesso!");
+        foreach (var item in result.Items)
+        {
+            Debug.Log("Item comprado: " + item.ItemId + " - " + item.DisplayName);
+        }
+    }*/
+
+    public void GetPlayerInventory()
+    {
+        PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), GetPlayerInventorySucess, GetPlayerInventoryFail);
+    }
+
+    private void GetPlayerInventoryFail(PlayFabError error)
+    {
+        Debug.Log("Erro: " + error.ErrorMessage);
+        apiFinished = true;
+    }
+
+    private void GetPlayerInventorySucess(GetUserInventoryResult result)
+    {
+        goldCoins = 0;
+
+        foreach (var coin in result.VirtualCurrency)
+        {
+            Debug.Log("Moeda: " + coin.Key + " - Quantidade: " + coin.Value);
+
+            if (coin.Key == "PC") goldCoins = coin.Value;
+        }
+
+        foreach (var item in result.Inventory)
+        {
+            Debug.Log("ItemID: " + item.ItemId + " - " + item.DisplayName + " - ItemInstanceId: " + item.ItemInstanceId);
+        }
+
+        MenuController.instance.UpdateCoins(goldCoins);
+        apiFinished = true;
+    }
+
+
 }

@@ -15,7 +15,8 @@ public class MenuController : MonoBehaviour
         Login,
         CreateAccount,
         RecoverAccount,
-        Ranking
+        Ranking,
+        Shop
     }
     public Screens currentScreen;
 
@@ -26,6 +27,7 @@ public class MenuController : MonoBehaviour
     [SerializeField] GameObject messageScreen;
     [SerializeField] GameObject recoverAccountScreen;
     [SerializeField] GameObject rankingScreen;
+    [SerializeField] GameObject shopScreen;
     [SerializeField] TextMeshProUGUI messageTXT;
 
     [Header("Login Information")]
@@ -40,6 +42,9 @@ public class MenuController : MonoBehaviour
 
     [Header("Recover Account")]
     [SerializeField] TMP_InputField inputRecoverAccount;
+
+    [Header("Shop")]
+    [SerializeField] TextMeshProUGUI coinsTXT;
 
     [Header("Rankings")]
     [SerializeField] string rankingName;
@@ -62,6 +67,7 @@ public class MenuController : MonoBehaviour
         createAccountScreen.SetActive(false);
         recoverAccountScreen.SetActive(false);
         rankingScreen.SetActive(false);
+        shopScreen.SetActive(false);
 
         switch (currentScreen)
         {
@@ -91,6 +97,10 @@ public class MenuController : MonoBehaviour
                 break;
 
             case Screens.Ranking:
+                rankingScreen.SetActive(true);
+                break;
+
+            case Screens.Shop:
                 rankingScreen.SetActive(true);
                 break;
         }
@@ -215,7 +225,24 @@ public class MenuController : MonoBehaviour
 
     public void StartGame()
     {
-        ShowScreen(Screens.Loading);
-        PlayfabManager.instance.GetLeaderboard(rankingName);
+        //ShowScreen(Screens.Loading);
+        //PlayfabManager.instance.GetLeaderboard(rankingName);
+
+        ShowScreen(Screens.Shop);
+    }
+
+    public void BuyTwoHandedAxe()
+    {
+        PlayfabManager.instance.BuyItemToPlayer("WP001001", "PC", 0);
+    }
+
+    public void BuyBow()
+    {
+        PlayfabManager.instance.BuyItemToPlayer("WP001002", "PC", 0);
+    }
+
+    public void UpdateCoins(int amount)
+    {
+        coinsTXT.text = amount.ToString("0000");
     }
 }
