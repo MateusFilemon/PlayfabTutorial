@@ -101,7 +101,7 @@ public class MenuController : MonoBehaviour
                 break;
 
             case Screens.Shop:
-                rankingScreen.SetActive(true);
+                shopScreen.SetActive(true);
                 break;
         }
     }
@@ -238,7 +238,12 @@ public class MenuController : MonoBehaviour
 
     public void BuyBow()
     {
-        PlayfabManager.instance.BuyItemToPlayer("WP001002", "PC", 0);
+        PlayfabManager.instance.BuyItemToPlayer("WP001002", "PC", 100);
+    }
+
+    public void BuyItem(int _price)
+    {
+        PlayfabManager.instance.BuyItemToPlayer("WP001002", "PC", _price);
     }
 
     public void UpdateCoins(int amount)

@@ -437,7 +437,11 @@ public class PlayfabManager : MonoBehaviour
         };
         PlayFabClientAPI.PurchaseItem(request, sucess =>
         {
-            if(coin == "PC") goldCoins -= value;
+            if (coin == "PC")
+            {
+                goldCoins -= value;
+                MenuController.instance.UpdateCoins(goldCoins);
+            }
 
             Debug.Log("Item comprado com sucesso!");
             foreach (var item in sucess.Items)
